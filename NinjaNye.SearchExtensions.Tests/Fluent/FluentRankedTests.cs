@@ -55,7 +55,13 @@ namespace NinjaNye.SearchExtensions.Tests.Fluent
         [Test]
         public void ToRanked_CorrectRankReturned()
         {
-            var result = _persontestData.Search(x => x.FirstName).ContainingAll("bert").ToLeftWeightedRanked();
+            string filterQuery = "bert";
+            var filterQueryItems = (filterQuery ?? "")
+                .Trim()
+                .Split(' ')
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .ToArray();
+            var result = _persontestData.Search(x => x.FirstName).ContainingAll(filterQueryItems).ToLeftWeightedRanked();
             var first = result.OrderByDescending(r => r.Hits).First();
             //as 'wee' is one char into string, it should add (7 - 1) to the hit count. - should add 6
             Assert.AreEqual(8, first.Hits);
@@ -70,10 +76,38 @@ namespace NinjaNye.SearchExtensions.Tests.Fluent
         [Test]
         public void ToRanked_CorrectRankReturnedMultipleParam()
         {
-            var result2 = _persontestData.Search(x => x.FirstName, x => x.LastName, x => x.Title).ContainingAll("bert").ToLeftWeightedRanked();
+            string filterQuery = "bert";
+            var filterQueryItems = (filterQuery ?? "")
+                .Trim()
+                .Split(' ')
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .ToArray();
+
+            var result2 = _persontestData.Search(x => x.FirstName, x => x.LastName, x => x.Title).ContainingAll(filterQueryItems).ToLeftWeightedRanked();
             var second = result2.OrderByDescending(r => r.Hits).First();
             //as word doesn't match second param at all, shouldn't increase hit count. 
             Assert.AreEqual(8, second.Hits);
+
+            //result = _persontestData.Search(x => x.Name).ContainingAll("ete").ToLeftWeightedRanked();
+            //first = result.OrderByDescending(r => r.Hits).First();
+
+            ////as 'ete' is three char into string, it should add (7 - 3) to the hit count. - should add 4
+            //Assert.AreEqual(5, first.Hits);
+        }
+
+        [Test]
+        public void ToRanked_CorrectRankReturnedWithWrongSearch()
+        {
+            string filterQuery = "bertz";
+            var filterQueryItems = (filterQuery ?? "")
+                .Trim()
+                .Split(' ')
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .ToArray();
+            var result = _persontestData.Search(x => x.FirstName).ContainingAll(filterQueryItems).ToLeftWeightedRanked();
+            var first = result.OrderByDescending(r => r.Hits).FirstOrDefault();
+            //as 'wee' is one char into string, it should add (7 - 1) to the hit count. - should add 6
+            Assert.AreEqual(0, first.Hits);
 
             //result = _persontestData.Search(x => x.Name).ContainingAll("ete").ToLeftWeightedRanked();
             //first = result.OrderByDescending(r => r.Hits).First();
